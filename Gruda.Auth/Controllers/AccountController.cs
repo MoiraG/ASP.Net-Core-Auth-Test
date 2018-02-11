@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -49,7 +50,8 @@ namespace Gruda.Auth.Controllers
 
                     return Ok(new
                     {
-                        access_token = CreateAccessToken()
+                        access_token = await CreateAccessToken(user),
+                        expires_in = (int)_jwtSettings.ExpiresInAsTimeStamp.TotalSeconds
                     });
 
                 }
@@ -58,7 +60,6 @@ namespace Gruda.Auth.Controllers
             return BadRequest("Could not verify username and password");
         }
 
-        [AllowAnonymous]
         [HttpPost("add-user")]
         public async Task<IActionResult> AddUser([FromBody] Credentials credentials)
         {
@@ -77,7 +78,6 @@ namespace Gruda.Auth.Controllers
             return BadRequest("Could not add User");
         }
 
-        [AllowAnonymous]
         [HttpGet("get-user/{id}", Name = "GetUserById")]
         public async Task<IActionResult> GetUserById(string id)
         {
@@ -112,17 +112,30 @@ namespace Gruda.Auth.Controllers
             return NoContent();
         }
 
-        private string CreateAccessToken()
+        private async Task<string> CreateAccessToken(ApplicationUser user)
         {
+            var now = DateTime.UtcNow;
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var userClaims = await _userManager.GetClaimsAsync(user);
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
-                //claims: claims,
-                expires: DateTime.Now.AddMinutes(_jwtSettings.ExpiresInMinutes),
-                signingCredentials: creds));
+                claims: userClaims.Union(claims),
+                notBefore: now,
+                expires: now.Add(_jwtSettings.ExpiresInAsTimeStamp),
+                signingCredentials: creds
+                ));
 
         }
     }
