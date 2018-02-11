@@ -11,11 +11,9 @@ namespace Gruda.Auth.Controllers
     [Route("api/[controller]")]
     public class ValuesController : Controller
     {
-        private readonly JWTSettings settings;
 
-        public ValuesController(IOptions<JWTSettings> settings)
+        public ValuesController()
         {
-            this.settings = settings.Value;
         }
 
         // GET api/values
@@ -29,7 +27,7 @@ namespace Gruda.Auth.Controllers
         [HttpGet("{id}")]
         public string Get(int id)
         {
-            return settings.Audience;
+            return "value" + id;
         }
 
         // POST api/values
