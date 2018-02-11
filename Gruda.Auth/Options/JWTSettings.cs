@@ -11,6 +11,6 @@ namespace Gruda.Auth.Options
         public string Issuer { get; set; }
         public string Audience { get; set; }
 
-        public int ExpiresInMinutes { get; set; }
+        public TimeSpan ExpiresInAsTimeStamp { get; set; }
     }
 }
