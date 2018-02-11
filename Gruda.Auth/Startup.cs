@@ -35,14 +35,27 @@ namespace Gruda.Auth
 
             services.Configure<JWTSettings>(Configuration.GetSection("JWTSettings"));
 
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                options.Lockout.MaxFailedAccessAttempts = 10;
+            });
+
+
             services.AddDbContext<SecurityContext>(options =>
                        options.UseSqlite(Configuration.GetConnectionString("SecurityConnection")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
+            services
+                .AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<SecurityContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(options =>
                 {
                     options.RequireHttpsMetadata = false;
@@ -53,18 +66,6 @@ namespace Gruda.Auth
             services.AddSingleton(InitializeAutoMapper());
 
             services.AddMvc();
-        }
-
-        private IMapper InitializeAutoMapper()
-        {
-            var config = new AutoMapper.MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<ApplicationUser, ApplicationUserViewModel>();
-            });
-
-            var mapper = config.CreateMapper();
-
-            return mapper;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,10 +97,29 @@ namespace Gruda.Auth
 
                 RequireExpirationTime = true,
 
-
                 // Validate the token expiry
-                ValidateLifetime = true
+                ValidateLifetime = true,
+
+                // This defines the maximum allowable clock skew when validating 
+                // the lifetime. As we're creating the tokens locally and validating
+                // them on the same machines which should have synchronised time,
+                // this can be set to zero.
+                ClockSkew = TimeSpan.FromMinutes(0)
             };
         }
+
+
+        private IMapper InitializeAutoMapper()
+        {
+            var config = new AutoMapper.MapperConfiguration(cfg =>
+            {
+                cfg.CreateMap<ApplicationUser, ApplicationUserViewModel>();
+            });
+
+            var mapper = config.CreateMapper();
+
+            return mapper;
+        }
+
     }
 }
