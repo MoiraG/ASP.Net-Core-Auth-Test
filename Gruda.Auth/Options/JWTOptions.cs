@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Gruda.Auth.Options
 {
-    public class JWTSettings
+    public class JWTOptions
     {
         public string SecretKey { get; set; }
         public string Issuer { get; set; }

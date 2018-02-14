@@ -22,18 +22,18 @@ namespace Gruda.Auth.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly JWTSettings _jwtSettings;
+        private readonly JWTOptions _jwtOptions;
         private readonly IMapper _modelMapper;
 
         public AccountController(UserManager<ApplicationUser> userManager,
                                     SignInManager<ApplicationUser> signInManager,
-                                    IOptionsSnapshot<JWTSettings> jwtSettings,
+                                    IOptionsSnapshot<JWTOptions> jwtSettings,
                                     IMapper modelMapper)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._modelMapper = modelMapper;
-            this._jwtSettings = jwtSettings.Value ?? throw new ArgumentNullException("JWT Settings must be filled!");
+            this._jwtOptions = jwtSettings.Value ?? throw new ArgumentNullException("JWT Settings must be filled!");
         }
 
         [AllowAnonymous]
@@ -50,7 +50,7 @@ namespace Gruda.Auth.Controllers
                     return Ok(new
                     {
                         access_token = await CreateAccessToken(user),
-                        expires_in = (int)_jwtSettings.ExpiresInAsTimeStamp.TotalSeconds
+                        expires_in = (int)_jwtOptions.ExpiresInAsTimeStamp.TotalSeconds
                     });
 
                 }
@@ -124,15 +124,15 @@ namespace Gruda.Auth.Controllers
 
             var userClaims = await _userManager.GetClaimsAsync(user);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
+                issuer: _jwtOptions.Issuer,
+                audience: _jwtOptions.Audience,
                 claims: userClaims.Union(claims),
                 notBefore: now,
-                expires: now.Add(_jwtSettings.ExpiresInAsTimeStamp),
+                expires: now.Add(_jwtOptions.ExpiresInAsTimeStamp),
                 signingCredentials: creds
                 ));
 
