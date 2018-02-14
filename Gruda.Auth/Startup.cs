@@ -38,12 +38,6 @@ namespace Gruda.Auth
             services.Configure<JWTOptions>(Configuration.GetSection("JWTSettings"));
             services.Configure<Options.ResponseCompressionOptions>(Configuration.GetSection("ResponseCompressionOptions"));
 
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
-                options.Lockout.MaxFailedAccessAttempts = 10;
-            });
-
             services.Configure<KestrelServerOptions>(options =>
             {
                 options.AddServerHeader = false;
@@ -53,7 +47,18 @@ namespace Gruda.Auth
                        options.UseSqlite(Configuration.GetConnectionString("SecurityConnection")));
 
             services
-                .AddIdentity<ApplicationUser, IdentityRole>()
+                .AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    options.Password.RequireDigit = true;
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireNonAlphanumeric = true;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequiredUniqueChars = 2;
+
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                    options.Lockout.MaxFailedAccessAttempts = 10;
+                })
                 .AddEntityFrameworkStores<SecurityContext>()
                 .AddDefaultTokenProviders();
 
