@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,7 +35,8 @@ namespace Gruda.Auth
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.Configure<JWTSettings>(Configuration.GetSection("JWTSettings"));
+            services.Configure<JWTOptions>(Configuration.GetSection("JWTSettings"));
+            services.Configure<Options.ResponseCompressionOptions>(Configuration.GetSection("ResponseCompressionOptions"));
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -68,13 +70,15 @@ namespace Gruda.Auth
 
                 });
 
+            services.AddResponseCompression();
+
             services.AddSingleton(InitializeAutoMapper());
 
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IOptions<Options.ResponseCompressionOptions> responseCompressionOptionsContainer)
         {
             if (env.IsDevelopment())
             {
@@ -82,6 +86,12 @@ namespace Gruda.Auth
             }
 
             app.UseAuthentication();
+
+            var responseCompressionOptions = responseCompressionOptionsContainer.Value;
+            if (responseCompressionOptions.UseResponseCompression)
+            {
+                app.UseResponseCompression();
+            }
 
             app.UseMvc();
         }
