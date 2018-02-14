@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,6 +42,10 @@ namespace Gruda.Auth
                 options.Lockout.MaxFailedAccessAttempts = 10;
             });
 
+            services.Configure<KestrelServerOptions>(options =>
+            {
+                options.AddServerHeader = false;
+            });
 
             services.AddDbContext<SecurityContext>(options =>
                        options.UseSqlite(Configuration.GetConnectionString("SecurityConnection")));
