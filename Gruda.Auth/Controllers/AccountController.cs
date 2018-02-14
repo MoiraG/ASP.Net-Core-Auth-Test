@@ -22,8 +22,8 @@ namespace Gruda.Auth.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IMapper _modelMapper;
         private readonly JWTSettings _jwtSettings;
+        private readonly IMapper _modelMapper;
 
         public AccountController(UserManager<ApplicationUser> userManager,
                                     SignInManager<ApplicationUser> signInManager,
@@ -42,11 +42,10 @@ namespace Gruda.Auth.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(credentials.UserName, credentials.Password, false, false);
+                var result = await _signInManager.PasswordSignInAsync(credentials.UserName, credentials.Password, isPersistent: false, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync(credentials.UserName);
-
 
                     return Ok(new
                     {
