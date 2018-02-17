@@ -21,16 +21,19 @@ namespace Gruda.Auth.Controllers
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JWTOptions _jwtOptions;
         private readonly IMapper _modelMapper;
 
         public AccountController(UserManager<ApplicationUser> userManager,
+                                    RoleManager<IdentityRole> roleManager,
                                     SignInManager<ApplicationUser> signInManager,
                                     IOptionsSnapshot<JWTOptions> jwtSettings,
                                     IMapper modelMapper)
         {
             this._userManager = userManager;
+            this._roleManager = roleManager;
             this._signInManager = signInManager;
             this._modelMapper = modelMapper;
             this._jwtOptions = jwtSettings.Value ?? throw new ArgumentNullException("JWT Settings must be filled!");
@@ -58,7 +61,7 @@ namespace Gruda.Auth.Controllers
 
             return BadRequest("Could not verify username and password");
         }
-
+     
         [HttpPost("add-user")]
         public async Task<IActionResult> AddUser([FromBody] Credentials credentials)
         {
@@ -123,6 +126,20 @@ namespace Gruda.Auth.Controllers
             };
 
             var userClaims = await _userManager.GetClaimsAsync(user);
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            foreach (var roleName in userRoles)
+            {
+                userClaims.Add(new Claim(ClaimTypes.Role, roleName));
+                if (_roleManager.SupportsRoleClaims)
+                {
+                    var role = await _roleManager.FindByNameAsync(roleName);
+                    if (role != null)
+                    {
+                        userClaims.Union(await _roleManager.GetClaimsAsync(role));
+                    }
+                }
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -130,7 +147,7 @@ namespace Gruda.Auth.Controllers
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
                 audience: _jwtOptions.Audience,
-                claims: userClaims.Union(claims),
+                claims: claims.Union(userClaims),
                 notBefore: now,
                 expires: now.Add(_jwtOptions.ExpiresInAsTimeStamp),
                 signingCredentials: creds

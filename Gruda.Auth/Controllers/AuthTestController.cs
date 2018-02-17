@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Gruda.Auth.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gruda.Auth.Controllers
@@ -30,6 +25,7 @@ namespace Gruda.Auth.Controllers
         }
 
         // GET: api/AuthTest/5
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}", Name = "Get")]
         public string Get(int id)
         {
