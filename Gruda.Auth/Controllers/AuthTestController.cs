@@ -19,10 +19,13 @@ namespace Gruda.Auth.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            var name = User.Identity.Name;
+            var id = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
+
             return Ok(new
             {
-                UserName = User.Identity.Name,
-                Id = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value
+                UserName = name,
+                Id = id
             });
         }
 
