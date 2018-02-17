@@ -33,7 +33,7 @@ namespace Gruda.Auth
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<JWTOptions>(Configuration.GetSection("JWTSettings"));
-            services.Configure<Options.ResponseCompressionOptions>(Configuration.GetSection("ResponseCompressionOptions"));
+            services.Configure<ResponseCompressionOptions>(Configuration.GetSection("ResponseCompressionOptions"));
 
             services.Configure<KestrelServerOptions>(options =>
             {
@@ -136,7 +136,7 @@ namespace Gruda.Auth
 
         private IMapper InitializeAutoMapper()
         {
-            var config = new AutoMapper.MapperConfiguration(cfg =>
+            var config = new MapperConfiguration(cfg =>
             {
                 cfg.CreateMap<ApplicationUser, ApplicationUserViewModel>();
             });
