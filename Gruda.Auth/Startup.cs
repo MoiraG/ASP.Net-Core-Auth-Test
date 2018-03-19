@@ -32,8 +32,8 @@ namespace Gruda.Auth
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<JWTOptions>(Configuration.GetSection("JWTSettings"));
-            services.Configure<ResponseCompressionOptions>(Configuration.GetSection("ResponseCompressionOptions"));
+            services.Configure<JWTOptions>(Configuration.GetSection(nameof(JWTOptions)));
+            services.Configure<ResponseCompressionOptions>(Configuration.GetSection(nameof(ResponseCompressionOptions)));
 
             services.Configure<KestrelServerOptions>(options =>
             {
